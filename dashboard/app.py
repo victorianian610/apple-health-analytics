@@ -19,11 +19,43 @@ st.set_page_config(
 
 # Load data 
 @st.cache_data
+@st.cache_data
 def load_data():
+    # Try local path first, fall back to sample data for demo
     base = '/Users/victoria/Desktop/DE/DS/Project/apple_health_export/apple_health_analysis/data'
-    master    = pd.read_csv(f'{base}/master_daily.csv', parse_dates=['date'])
-    anomalies = pd.read_csv(f'{base}/anomaly_results.csv', parse_dates=['date'])
-    yearly    = pd.read_csv(f'{base}/yearly_summary.csv')
+    try:
+        master    = pd.read_csv(f'{base}/master_daily.csv', parse_dates=['date'])
+        anomalies = pd.read_csv(f'{base}/anomaly_results.csv', parse_dates=['date'])
+        yearly    = pd.read_csv(f'{base}/yearly_summary.csv')
+    except FileNotFoundError:
+        # Generate sample data for demo
+        dates = pd.date_range('2017-04-09', '2026-03-05', freq='D')
+        np.random.seed(42)
+        n = len(dates)
+        master = pd.DataFrame({
+            'date': dates,
+            'steps': np.random.normal(6667, 3000, n).clip(0, 40000).astype(int),
+            'distance_km': np.random.normal(4.5, 2, n).clip(0, 30),
+            'calories': np.random.normal(272, 100, n).clip(0, 900),
+            'hr_avg': np.random.normal(86, 10, n).clip(40, 140),
+            'hr_min': np.random.normal(60, 8, n).clip(40, 100),
+            'hr_max': np.random.normal(110, 15, n).clip(60, 180),
+            'sleep_hrs': np.random.normal(6.6, 2, n).clip(0, 14),
+            'year': pd.DatetimeIndex(dates).year,
+            'month': pd.DatetimeIndex(dates).month,
+            'weekday': pd.DatetimeIndex(dates).day_name(),
+            'week': pd.DatetimeIndex(dates).isocalendar().week.astype(int)
+        })
+        anomalies = master[['date', 'steps', 'hr_avg', 'sleep_hrs']].copy()
+        anomalies['is_anomaly'] = np.random.choice([True, False], n, p=[0.05, 0.95])
+        anomalies['anomaly_score'] = np.random.normal(-0.1, 0.05, n)
+        yearly = master.groupby('year').agg(
+            avg_steps=('steps', 'mean'),
+            avg_sleep=('sleep_hrs', 'mean'),
+            avg_hr=('hr_avg', 'mean'),
+            avg_calories=('calories', 'mean'),
+        ).reset_index()
+        st.info("⚠️ Demo mode: showing sample data. Connect your Apple Health data to see real insights!")
     return master, anomalies, yearly
 
 master, anomalies, yearly = load_data()
