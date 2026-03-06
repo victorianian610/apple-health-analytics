@@ -9,7 +9,10 @@ import anthropic
 from dotenv import load_dotenv
 import os
 
-load_dotenv('/Users/victoria/Desktop/DE/DS/Project/apple_health_export/apple_health_analysis/.env')
+try:
+    load_dotenv('/Users/victoria/Desktop/DE/DS/Project/apple_health_export/apple_health_analysis/.env')
+except:
+    pass
 
 st.set_page_config(
     page_title="My Health Dashboard",
@@ -18,7 +21,6 @@ st.set_page_config(
 )
 
 # Load data 
-@st.cache_data
 @st.cache_data
 def load_data():
     # Try local path first, fall back to sample data for demo
@@ -354,7 +356,9 @@ with tab6:
         # Get AI response
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
-                client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+                # Works both locally and on Streamlit Cloud
+                api_key = st.secrets.get("ANTHROPIC_API_KEY", os.getenv("ANTHROPIC_API_KEY"))
+                client = anthropic.Anthropic(api_key=api_key)
                 
                 response = client.messages.create(
                     model="claude-sonnet-4-20250514",
