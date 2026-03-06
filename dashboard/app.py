@@ -11,14 +11,13 @@ import os
 
 load_dotenv('/Users/victoria/Desktop/DE/DS/Project/apple_health_export/apple_health_analysis/.env')
 
-# ── Page config ────────────────────────────────────
 st.set_page_config(
     page_title="My Health Dashboard",
     page_icon="🏃",
     layout="wide"
 )
 
-# ── Load data ──────────────────────────────────────
+# Load data 
 @st.cache_data
 def load_data():
     base = '/Users/victoria/Desktop/DE/DS/Project/apple_health_export/apple_health_analysis/data'
@@ -29,12 +28,10 @@ def load_data():
 
 master, anomalies, yearly = load_data()
 
-# ── Header ─────────────────────────────────────────
+# Header
 st.title("🏃 Personal Health Analytics Dashboard")
 st.markdown("*9 years of Apple Health data — 2017 to 2026*")
 st.divider()
-
-# ── Top KPI cards ──────────────────────────────────
 col1, col2, col3, col4, col5 = st.columns(5)
 col1.metric("Avg Daily Steps",    f"{master['steps'].mean():,.0f}",      "Goal: 10,000")
 col2.metric("Days Hit 10k Steps", f"{(master['steps']>=10000).mean()*100:.1f}%", "of all days")
@@ -44,13 +41,11 @@ col5.metric("Total Days Tracked", f"{len(master):,}",                    "days")
 
 st.divider()
 
-# ── Sidebar filters ────────────────────────────────
 st.sidebar.header("🔧 Filters")
 years = sorted(master['date'].dt.year.unique())
 selected_years = st.sidebar.multiselect("Select Years", years, default=years)
 filtered = master[master['date'].dt.year.isin(selected_years)]
 
-# ── Tab layout ─────────────────────────────────────
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "📈 Steps & Activity", 
     "😴 Sleep", 
@@ -60,9 +55,8 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "🤖 AI Health Agent"
 ])
 
-# ────────────────────────────────────────────────────
+
 # TAB 1: Steps
-# ────────────────────────────────────────────────────
 with tab1:
     st.subheader("Steps & Activity Over Time")
     
@@ -106,9 +100,7 @@ with tab1:
         fig3.add_hline(y=10000, line_dash='dash', line_color='red')
         st.plotly_chart(fig3, use_container_width=True)
 
-# ────────────────────────────────────────────────────
 # TAB 2: Sleep
-# ────────────────────────────────────────────────────
 with tab2:
     st.subheader("Sleep Analysis")
     sleep_clean = filtered[filtered['sleep_hrs'].between(1, 14)].copy()
@@ -149,9 +141,7 @@ with tab2:
         fig3.add_hline(y=8, line_dash='dash', line_color='red')
         st.plotly_chart(fig3, use_container_width=True)
 
-# ────────────────────────────────────────────────────
 # TAB 3: Heart Rate
-# ────────────────────────────────────────────────────
 with tab3:
     st.subheader("Heart Rate Analysis")
     hr_clean = filtered[filtered['hr_avg'].between(40, 120)].copy()
@@ -188,9 +178,7 @@ with tab3:
                   color_continuous_scale='RdYlGn_r')
         st.plotly_chart(fig3, use_container_width=True)
 
-# ────────────────────────────────────────────────────
 # TAB 4: Correlations
-# ────────────────────────────────────────────────────
 with tab4:
     st.subheader("Health Metrics Correlations")
 
@@ -213,9 +201,7 @@ with tab4:
                   title=f"Sleep → Next Day Steps (r={corr_val:.3f})")
         st.plotly_chart(fig2, use_container_width=True)
 
-# ────────────────────────────────────────────────────
 # TAB 5: Anomalies
-# ────────────────────────────────────────────────────
 with tab5:
     st.subheader("🚨 Anomaly Detection (Isolation Forest)")
 
@@ -252,9 +238,8 @@ with tab5:
                  use_container_width=True)
     
 
-# ────────────────────────────────────────────────────
+
 # TAB 6: AI Health Agent
-# ────────────────────────────────────────────────────
 with tab6:
     st.subheader("🤖 Personal AI Health Agent")
     st.markdown("*Ask me anything about your health, training plans, or nutrition!*")
@@ -293,7 +278,7 @@ with tab6:
     Be encouraging but honest. Keep responses concise and actionable.
     """
 
-    # ── Chat interface ──────────────────────────────
+    # Chat interface
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
